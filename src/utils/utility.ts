@@ -11,10 +11,18 @@ export const itemColor = [
 ];
 
 export function randomColorGen() {
+  const colorCode = JSON.parse(localStorage.getItem('itemColor') as string);
   let numbers = itemColor.length - 1;
-  let randomizer = Math.floor(Math.random() * numbers);
-  // console.log({ randomizer });
-  return itemColor[randomizer];
+  let randomizer = Math.round(Math.random() * numbers);
+  // console.log(randomizer);
+
+  const color = itemColor[randomizer];
+  localStorage.setItem('itemColor', JSON.stringify(color.colorCode));
+  if (colorCode == null) return color;
+  if (color.colorCode === colorCode) {
+    // console.log('double');
+    return randomColorGen();
+  } else return color;
 }
 
 export const submitItems = ({

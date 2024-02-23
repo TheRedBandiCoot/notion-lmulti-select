@@ -48,7 +48,7 @@ function App() {
   const handleCreateClick = () => {
     if (!color) return;
     submitItems({ setItems, setFilteredItems, setValue, inputRef, value, items, color });
-    setItemColor(randomColorGen());
+    setItemColor(randomColorGen);
   };
 
   const handleOnChangeInput = (e: ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +66,7 @@ function App() {
       if (value.trim() === '') return;
       if (!color) return;
       submitItems({ setItems, setFilteredItems, setValue, inputRef, value, items, color: color });
-      setItemColor(randomColorGen());
+      setItemColor(randomColorGen);
       return;
     }
     inputRef.current?.focus();
@@ -77,7 +77,7 @@ function App() {
   }
 
   function handleInputOnClick() {
-    setItemColor(randomColorGen());
+    setItemColor(randomColorGen);
   }
 
   const deleteItem = (id: string) => {
@@ -85,6 +85,7 @@ function App() {
     setItems(deleteItems);
     let deleteAndFilteredItems = filteredItems?.filter((item) => item._id !== id)!;
     setFilteredItems(deleteAndFilteredItems);
+    // setID(null);
   };
 
   const handleChangeItem = (id: string, colors: { color: string; colorCode: string }) => {
@@ -107,13 +108,19 @@ function App() {
 
   const handleItemUpdateBtn = (e: MouseEvent, value: string) => {
     e.stopPropagation();
-    const id = e.currentTarget.getAttribute('data-id');
-    setID(id);
+    const ID = e.currentTarget.getAttribute('data-id');
+    setID(ID);
     setIsUpdateModal(true);
     setValue2(value);
-    // setDataID();
-
-    modalInputRef.current?.focus();
+    // console.log(ID);
+    const key = e.currentTarget.nextElementSibling?.children[0].getAttribute('data-id');
+    setTimeout(() => {
+      document.querySelectorAll('.update-modal--input').forEach((input) => {
+        if (input.getAttribute('data-id') !== key) return;
+        // @ts-ignore
+        input.focus();
+      });
+    }, 300);
   };
 
   const handleModalInputUpdateSubmit = (e: KeyboardEvent, tag: Data) => {
@@ -139,6 +146,41 @@ function App() {
       setIsUpdateModal(false);
       inputRef.current?.focus();
     }
+  };
+
+  const handleModalLayoutBtn = () => {
+    if (isUpdateModal) {
+      //@ Case 1: Value empty
+      if (value2.trim() === '') return setOutline(true);
+      // @ Case 2: Value Same BUT ID Not match (So by mean if value not match and some other item value is same as this one value so there two same value that why)
+      if (items?.some((item) => item.value === value2.trim() && item._id !== id)) return setOutline(true);
+      //@ Case 3: Value same
+      if (items?.some((item) => item.value === value2.trim())) {
+        setIsUpdateModal(false);
+        inputRef.current?.focus();
+        return;
+      }
+      //@ Case 4: Value Not same but ID same so items value update with new value
+      if (items?.some((item) => item.value !== value2.trim() && item._id === id)) {
+        const updateItem = items?.map((item) => {
+          if (item._id === id) {
+            return { ...item, value: value2.trim()! };
+          }
+          return item;
+        });
+
+        const updateFilteredItem = filteredItems?.map((item) => {
+          if (item._id === id) {
+            return { ...item, value: value2.trim()! };
+          }
+          return item;
+        });
+        setItems(updateItem!);
+        setFilteredItems(updateFilteredItem!);
+      }
+    }
+    setIsUpdateModal(false);
+    inputRef.current?.focus();
   };
 
   //@ Get Item On Local Storage
@@ -190,7 +232,10 @@ function App() {
         case 'ArrowDown':
           if (ulRef.current) {
             const newValue = highlightedIndex + (e.code === 'ArrowDown' ? 1 : -1);
+            // console.log(newValue);
             if (newValue == ulRef.current?.children.length) setHighlightedIndex(0);
+            if (newValue == -1) setHighlightedIndex(ulRef.current?.children.length - 1);
+
             if (newValue >= 0 && newValue < ulRef.current.children.length) {
               setHighlightedIndex(newValue);
             }
@@ -208,37 +253,7 @@ function App() {
 
   return (
     <div className="container">
-      {isUpdateModal && (
-        <div
-          className="update-modal--layout"
-          onClick={() => {
-            if (isUpdateModal) {
-              if (modalInputRef.current?.value.trim() === '') return setOutline(true);
-              if (
-                items?.some((item) => item.value === modalInputRef.current?.value.trim() && item._id !== id)
-              )
-                return setOutline(true);
-
-              const updateItem = items?.map((item) => {
-                if (item._id === id) {
-                  return { ...item, value: modalInputRef.current?.value.trim()! };
-                }
-                return item;
-              });
-              const updateFilteredItem = filteredItems?.map((item) => {
-                if (item._id === id) {
-                  return { ...item, value: modalInputRef.current?.value.trim()! };
-                }
-                return item;
-              });
-              setItems(updateItem!);
-              setFilteredItems(updateFilteredItem!);
-            }
-            setIsUpdateModal(false);
-            inputRef.current?.focus();
-          }}
-        ></div>
-      )}
+      {isUpdateModal && <div className="update-modal--layout" onClick={handleModalLayoutBtn}></div>}
 
       <div className="input" onClick={() => setIsSearchOn(true)}>
         {filteredItems?.map(({ _id, value, color }, i) => (
