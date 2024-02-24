@@ -224,7 +224,7 @@ function App() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target != inputRef.current) return;
-      switch (e.code) {
+      switch (e.key) {
         case 'Enter':
           selectOption(itemsFiltered?.[highlightedIndex]!);
           break;
